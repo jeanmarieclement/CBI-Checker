@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CBIPaymentRequest xmlns="urn:CBI:xsd:CBIPaymentRequest.00.04.01">
+    <GrpHdr>
+        <MsgId>MSG-20230001</MsgId>
+        <CreDtTm>2023-11-20T10:30:00</CreDtTm>
+        <NbOfTxs>2</NbOfTxs>
+        <CtrlSum>1500.00</CtrlSum>
+        <InitgPty>
+            <Nm>Azienda Esempio SPA</Nm>
+            <Id>
+                <OrgId>
+                    <Othr>
+                        <Id>IT01234567890</Id>
+                        <Issr>ADE</Issr>
+                    </Othr>
+                </OrgId>
+            </Id>
+        </InitgPty>
+    </GrpHdr>
+    <PmtInf>
+        <PmtInfId>PAY-20230001</PmtInfId>
+        <PmtMtd>TRF</PmtMtd>
+        <BtchBookg>true</BtchBookg>
+        <PmtTpInf>
+            <InstrPrty>NORM</InstrPrty>
+            <SvcLvl>
+                <Cd>SEPA</Cd>
+            </SvcLvl>
+        </PmtTpInf>
+        <ReqdExctnDt>
+            <Dt>2023-11-25</Dt>
+        </ReqdExctnDt>
+        <Dbtr>
+            <Nm>Azienda Esempio SPA</Nm>
+            <PstlAdr>
+                <Ctry>IT</Ctry>
+                <AdrLine>Via Roma 123</AdrLine>
+                <AdrLine>20100 Milano MI</AdrLine>
+            </PstlAdr>
+            <Id>
+                <OrgId>
+                    <AnyBIC>EXMPITMM</AnyBIC>
+                    <LEI>097537AC000000000124</LEI>
+                </OrgId>
+            </Id>
+            <CtryOfRes>IT</CtryOfRes>
+        </Dbtr>
+        <DbtrAcct>
+            <Id>
+                <IBAN>IT60X0542811101000000123456</IBAN>
+            </Id>
+        </DbtrAcct>
+        <DbtrAgt>
+            <FinInstnId>
+                <BICFI>UNCRITMMXXX</BICFI>
+                <ClrSysMmbId>
+                    <MmbId>12345</MmbId>
+                </ClrSysMmbId>
+            </FinInstnId>
+        </DbtrAgt>
+        <ChrgBr>SLEV</ChrgBr>
+        <CdtTrfTxInf>
+            <PmtId>
+                <InstrId>INSTR-20230001-1</InstrId>
+                <EndToEndId>END2END-20230001-1</EndToEndId>
+                <UETR>97e89765-7af1-4f25-a636-8024fa2587e0</UETR>
+            </PmtId>
+            <PmtTpInf>
+                <SvcLvl>
+                    <Prtry>STANDARD</Prtry>
+                </SvcLvl>
+                <CtgyPurp>
+                    <Cd>SUPP</Cd>
+                </CtgyPurp>
+            </PmtTpInf>
+            <Amt>
+                <InstdAmt Ccy="EUR">1000.00</InstdAmt>
+            </Amt>
+            <CdtrAgt>
+                <FinInstnId>
+                    <BICFI>ABCDIT12XXX</BICFI>
+                </FinInstnId>
+            </CdtrAgt>
+            <Cdtr>
+                <Nm>Fornitore Uno SRL</Nm>
+                <PstlAdr>
+                    <Ctry>IT</Ctry>
+                    <AdrLine>Via Verdi 456</AdrLine>
+                    <AdrLine>00100 Roma RM</AdrLine>
+                </PstlAdr>
+                <Id>
+                    <OrgId>
+                        <AnyBIC>FORNIT1X</AnyBIC>
+                        <Othr>
+                            <Id>IT98765432100</Id>
+                            <Issr>ADE</Issr>
+                        </Othr>
+                    </OrgId>
+                </Id>
+            </Cdtr>
+            <CdtrAcct>
+                <Id>
+                    <IBAN>IT60X0542811101000000654321</IBAN>
+                </Id>
+            </CdtrAcct>
+            <Purp>
+                <Cd>SUPP</Cd>
+            </Purp>
+            <RmtInf>
+                <Ustrd>Pagamento fattura 12345 del 2023-10-15</Ustrd>
+                <Strd>
+                    <RfrdDocInf>
+                        <Tp>
+                            <CdOrPrtry>
+                                <Cd>CINV</Cd>
+                            </CdOrPrtry>
+                        </Tp>
+                        <Nb>12345</Nb>
+                        <RltdDt>2023-10-15</RltdDt>
+                    </RfrdDocInf>
+                    <RfrdDocAmt>
+                        <DuePyblAmt Ccy="EUR">1000.00</DuePyblAmt>
+                        <RmtdAmt Ccy="EUR">1000.00</RmtdAmt>
+                    </RfrdDocAmt>
+                    <CdtrRefInf>
+                        <Tp>
+                            <CdOrPrtry>
+                                <Cd>SCOR</Cd>
+                            </CdOrPrtry>
+                        </Tp>
+                        <Ref>RF18123456789</Ref>
+                    </CdtrRefInf>
+                    <AddtlRmtInf>Saldo completo fattura</AddtlRmtInf>
+                </Strd>
+            </RmtInf>
+        </CdtTrfTxInf>
+        <CdtTrfTxInf>
+            <PmtId>
+                <InstrId>INSTR-20230001-2</InstrId>
+                <EndToEndId>END2END-20230001-2</EndToEndId>
+            </PmtId>
+            <Amt>
+                <InstdAmt Ccy="EUR">500.00</InstdAmt>
+            </Amt>
+            <Cdtr>
+                <Nm>Fornitore Due SAS</Nm>
+                <PstlAdr>
+                    <Ctry>IT</Ctry>
+                    <AdrLine>Corso Italia 789</AdrLine>
+                    <AdrLine>10100 Torino TO</AdrLine>
+                </PstlAdr>
+            </Cdtr>
+            <CdtrAcct>
+                <Id>
+                    <IBAN>IT60X0542811101000000987654</IBAN>
+                </Id>
+            </CdtrAcct>
+            <RmtInf>
+                <Ustrd>Acconto ordine 54321</Ustrd>
+            </RmtInf>
+        </CdtTrfTxInf>
+    </PmtInf>
+</CBIPaymentRequest>

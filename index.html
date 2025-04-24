@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validatore XML CBI Payment Request</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css" rel="stylesheet">
+    <style>
+        .CodeMirror {
+            height: auto;
+            min-height: 300px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .error-marker {
+            background-color: rgba(255, 0, 0, 0.2);
+            position: absolute;
+        }
+        .error-message {
+            color: #f44336;
+            font-size: 13px;
+            padding: 2px 5px;
+            background-color: rgba(244, 67, 54, 0.1);
+            border-radius: 2px;
+        }
+        .validation-panel {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .drop-zone {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            background-color: #f9fafb;
+            margin-bottom: 1rem;
+        }
+        .drop-zone.active {
+            border-color: #3b82f6;
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+        .drop-zone-text {
+            color: #6b7280;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto py-8 px-4">
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl font-bold text-blue-800 mb-2">Validatore XML CBI Payment Request</h1>
+            <p class="text-gray-600">Valida il tuo XML secondo lo schema CBIPaymentRequest.00.04.01.xsd</p>
+        </header>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-blue-800">
+                            <strong>Disclaimer:</strong> Questo strumento è fornito a scopo dimostrativo. La validazione XML è basata sullo schema CBI Payment Request, ma non garantisce la completa conformità con tutti i requisiti bancari. Verificare sempre i file con gli strumenti ufficiali prima dell'invio.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="drop-zone" class="drop-zone mb-4">
+                <div class="drop-zone-text">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <p class="mb-1">Trascina qui il tuo file XML</p>
+                    <p class="text-sm">oppure</p>
+                    <label class="inline-flex items-center px-4 py-2 mt-2 bg-blue-600 text-white rounded cursor-pointer hover:bg-blue-700 transition">
+                        <span>Seleziona file</span>
+                        <input type="file" id="xml-file-input" accept=".xml" class="hidden">
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center mb-4 gap-4">
+                <button id="validate-btn" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Valida XML
+                </button>
+
+                <button id="format-btn" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                    </svg>
+                    Formatta XML
+                </button>
+
+                <button id="clear-btn" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Pulisci
+                </button>
+
+                <button id="example-btn" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Carica esempio
+                </button>
+            </div>
+
+            <p id="file-info" class="mb-3 text-sm text-gray-500 hidden">
+                <span id="file-name"></span> (<span id="file-size"></span>)
+            </p>
+            
+            <div id="validation-results" class="hidden mt-4 mb-4">
+
+                <div id="validation-status" class="p-4 mb-3 rounded flex items-start">
+                    <div class="flex-shrink-0 mr-3">
+                        <svg id="success-icon" class="h-6 w-6 text-green-500 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <svg id="error-icon" class="h-6 w-6 text-red-500 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 id="validation-title" class="font-semibold text-lg"></h3>
+                        <p id="validation-message" class="text-sm mt-1"></p>
+                    </div>
+                </div>
+
+                <div id="error-details" class="bg-gray-50 rounded p-4 validation-panel hidden">
+                    <h4 class="font-medium text-red-700 mb-2">Dettagli errori:</h4>
+                    <ul id="error-list" class="text-sm space-y-2"></ul>
+                </div>
+            </div>
+            
+            <div id="loading-indicator" class="flex items-center justify-center p-4 hidden">
+                <svg class="animate-spin h-10 w-10 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="ml-3 text-lg font-medium text-blue-600">Validazione in corso...</span>
+            </div>
+            
+            <div class="mb-5">
+                <textarea id="xml-editor" class="w-full"></textarea>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-bold text-blue-800 mb-4">Informazioni sullo schema</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-semibold mb-2">Dettagli schema</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li><span class="font-medium">Nome:</span> CBIPaymentRequest.00.04.01.xsd</li>
+                        <li><span class="font-medium">Namespace:</span> urn:CBI:xsd:CBIPaymentRequest.00.04.01</li>
+                        <li><span class="font-medium">Entrata in vigore:</span> 19/11/2023</li>
+                        <li><span class="font-medium">Elemento radice:</span> CBIPaymentRequest</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-semibold mb-2">Elementi principali richiesti</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li><span class="font-medium">GrpHdr:</span> Group Header, contiene informazioni generali sull'intera richiesta</li>
+                        <li><span class="font-medium">PmtInf:</span> Payment Information, contiene dettagli sulle singole transazioni</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/xml-fold.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/foldcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/foldgutter.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closetag.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vkbeautify/0.99.3/vkbeautify.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inizializza CodeMirror
+            const editor = CodeMirror.fromTextArea(document.getElementById("xml-editor"), {
+                mode: "application/xml",
+                theme: "dracula",
+                lineNumbers: true,
+                lineWrapping: true,
+                matchBrackets: true,
+                autoCloseBrackets: true,
+                foldGutter: true,
+                gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+                extraKeys: {"Ctrl-Space": "autocomplete"}
+            });
+
+            // Gestione degli errori e dei marker
+            let errorMarkers = [];
+            
+            function clearErrorMarkers() {
+                for (let marker of errorMarkers) {
+                    marker.clear();
+                }
+                errorMarkers = [];
+            }
+
+            function markError(line, message) {
+                const lineInfo = editor.lineInfo(line - 1);
+                if (!lineInfo) return;
+                
+                // Crea marker per la linea
+                const marker = editor.markText(
+                    {line: line - 1, ch: 0},
+                    {line: line - 1, ch: lineInfo.text.length},
+                    {className: "error-marker"}
+                );
+                errorMarkers.push(marker);
+                
+                // Aggiungi messaggio alla lista degli errori
+                const errorItem = document.createElement('li');
+                errorItem.className = "flex items-start";
+                errorItem.innerHTML = `
+                    <span class="inline-block bg-red-100 text-red-800 font-medium px-2 py-1 rounded mr-2">Linea ${line}</span>
+                    <span class="error-message">${message}</span>
+                `;
+                
+                // Rendi l'errore cliccabile per navigare alla linea corrispondente
+                errorItem.addEventListener('click', function() {
+                    editor.setCursor(line - 1, 0);
+                    editor.focus();
+                });
+                
+                document.getElementById('error-list').appendChild(errorItem);
+            }
+
+            // Gestione drag and drop
+            const dropZone = document.getElementById('drop-zone');
+            
+            // Previeni il comportamento predefinito per drag and drop
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+                document.body.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            // Evidenzia la drop zone quando si trascina un file sopra di essa
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight() {
+                dropZone.classList.add('active');
+            }
+            
+            function unhighlight() {
+                dropZone.classList.remove('active');
+            }
+            
+            // Gestisci il drop del file
+            dropZone.addEventListener('drop', handleDrop, false);
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files.length) {
+                    handleFiles(files[0]);
+                }
+            }
+            
+            // Gestione upload file tramite input
+            document.getElementById('xml-file-input').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    handleFiles(file);
+                }
+            });
+            
+            function handleFiles(file) {
+                if (!file || !file.name.toLowerCase().endsWith('.xml')) {
+                    alert('Per favore seleziona un file XML valido.');
+                    return;
+                }
+                
+                // Mostra informazioni sul file
+                document.getElementById('file-name').textContent = file.name;
+                document.getElementById('file-size').textContent = formatFileSize(file.size);
+                document.getElementById('file-info').classList.remove('hidden');
+                
+                // Pulisci eventuali risultati di validazione precedenti
+                clearValidationResults();
+                
+                // Leggi il contenuto del file
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    editor.setValue(e.target.result);
+                };
+                reader.readAsText(file);
+            }
+
+            // Formatta dimensione file
+            function formatFileSize(bytes) {
+                if (bytes < 1024) return bytes + ' bytes';
+                else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+                else return (bytes / 1048576).toFixed(1) + ' MB';
+            }
+
+            // Funzione per pulire i risultati di validazione
+            function clearValidationResults() {
+                clearErrorMarkers();
+                document.getElementById('error-list').innerHTML = '';
+                document.getElementById('validation-results').classList.add('hidden');
+                document.getElementById('loading-indicator').classList.add('hidden');
+            }
+            
+            // Validazione XML
+            document.getElementById('validate-btn').addEventListener('click', function() {
+                const xmlContent = editor.getValue().trim();
+                if (!xmlContent) {
+                    alert('Inserisci o carica un documento XML prima di validare.');
+                    return;
+                }
+                
+                // Mostra indicatore di caricamento
+                document.getElementById('loading-indicator').classList.remove('hidden');
+                document.getElementById('validation-results').classList.add('hidden');
+                
+                // Pulisci eventuali errori precedenti
+                clearErrorMarkers();
+                document.getElementById('error-list').innerHTML = '';
+                
+                // Invia XML al server per la validazione
+                fetch('validate.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'xml=' + encodeURIComponent(xmlContent)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Nascondi indicatore di caricamento
+                    document.getElementById('loading-indicator').classList.add('hidden');
+                    document.getElementById('validation-results').classList.remove('hidden');
+                    
+                    const statusElement = document.getElementById('validation-status');
+                    const titleElement = document.getElementById('validation-title');
+                    const messageElement = document.getElementById('validation-message');
+                    
+                    if (data.valid) {
+                        // XML valido
+                        statusElement.classList.remove('bg-red-100');
+                        statusElement.classList.add('bg-green-100');
+                        titleElement.classList.remove('text-red-800');
+                        titleElement.classList.add('text-green-800');
+                        titleElement.textContent = 'Validazione riuscita!';
+                        messageElement.textContent = data.message;
+                        
+                        document.getElementById('success-icon').classList.remove('hidden');
+                        document.getElementById('error-icon').classList.add('hidden');
+                        document.getElementById('error-details').classList.add('hidden');
+                    } else {
+                        // XML non valido
+                        statusElement.classList.remove('bg-green-100');
+                        statusElement.classList.add('bg-red-100');
+                        titleElement.classList.remove('text-green-800');
+                        titleElement.classList.add('text-red-800');
+                        titleElement.textContent = 'Validazione fallita';
+                        messageElement.textContent = data.message;
+                        
+                        document.getElementById('success-icon').classList.add('hidden');
+                        document.getElementById('error-icon').classList.remove('hidden');
+                        document.getElementById('error-details').classList.remove('hidden');
+                        
+                        // Mostra gli errori
+                        if (data.errors && data.errors.length > 0) {
+                            data.errors.forEach(error => {
+                                markError(error.line, error.message);
+                            });
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('loading-indicator').classList.add('hidden');
+                    alert('Si è verificato un errore durante la validazione. Riprova più tardi.');
+                });
+            });
+            
+            // Formattazione XML
+            document.getElementById('format-btn').addEventListener('click', function() {
+                const xmlContent = editor.getValue().trim();
+                if (!xmlContent) {
+                    alert('Inserisci o carica un documento XML prima di formattarlo.');
+                    return;
+                }
+                
+                try {
+                    // Utilizziamo un approccio più semplice ma affidabile
+                    function formatXML(xml) {
+                        // Crea un parser XML
+                        let parser = new DOMParser();
+                        let xmlDoc = parser.parseFromString(xml, "text/xml");
+                        
+                        // Verifica se ci sono errori di parsing
+                        if (xmlDoc.getElementsByTagName('parsererror').length > 0) {
+                            throw new Error('XML non valido');
+                        }
+                        
+                        // Funzione per formattare ricorsivamente i nodi
+                        function formatNode(node, level) {
+                            let result = '';
+                            const indent = '  '.repeat(level);
+                            
+                            // Gestisci diversi tipi di nodi
+                            switch(node.nodeType) {
+                                case 1: // Elemento
+                                    result += indent + '<' + node.nodeName;
+                                    
+                                    // Aggiungi attributi
+                                    for (let i = 0; i < node.attributes.length; i++) {
+                                        const attr = node.attributes[i];
+                                        result += ' ' + attr.name + '="' + attr.value + '"';
+                                    }
+                                    
+                                    // Gestisci figli
+                                    if (node.childNodes.length === 0) {
+                                        result += '/>\n';
+                                    } else {
+                                        result += '>';
+                                        
+                                        let hasElementChild = false;
+                                        let textContent = '';
+                                        
+                                        // Controlla se ci sono figli elemento o solo testo
+                                        for (let i = 0; i < node.childNodes.length; i++) {
+                                            if (node.childNodes[i].nodeType === 1) {
+                                                hasElementChild = true;
+                                                break;
+                                            } else if (node.childNodes[i].nodeType === 3) {
+                                                textContent += node.childNodes[i].nodeValue;
+                                            }
+                                        }
+                                        
+                                        if (hasElementChild) {
+                                            result += '\n';
+                                            for (let i = 0; i < node.childNodes.length; i++) {
+                                                result += formatNode(node.childNodes[i], level + 1);
+                                            }
+                                            result += indent;
+                                        } else {
+                                            // Solo testo, non aggiungere spazi o interruzioni di riga
+                                            result += textContent.trim();
+                                        }
+                                        
+                                        result += '</' + node.nodeName + '>\n';
+                                    }
+                                    break;
+                                    
+                                case 3: // Testo
+                                    const text = node.nodeValue.trim();
+                                    if (text) {
+                                        result += text;
+                                    }
+                                    break;
+                                    
+                                case 8: // Commento
+                                    result += indent + '<!--' + node.nodeValue + '-->\n';
+                                    break;
+                                    
+                                case 9: // Documento
+                                    for (let i = 0; i < node.childNodes.length; i++) {
+                                        result += formatNode(node.childNodes[i], level);
+                                    }
+                                    break;
+                            }
+                            
+                            return result;
+                        }
+                        
+                        // Estrai la dichiarazione XML se presente
+                        let xmlDeclaration = '';
+                        if (xml.trim().startsWith('<?xml')) {
+                            const endIndex = xml.indexOf('?>');
+                            if (endIndex > 0) {
+                                xmlDeclaration = xml.substring(0, endIndex + 2) + '\n';
+                            }
+                        }
+                        
+                        // Formatta il documento
+                        let formatted = xmlDeclaration + formatNode(xmlDoc.documentElement, 0);
+                        return formatted;
+                    }
+                    
+                    // Metodo alternativo se il primo fallisce
+                    function formatXMLFallback(xml) {
+                        // Preserva la dichiarazione XML
+                        let xmlDeclaration = '';
+                        let xmlBody = xml;
+                        
+                        if (xml.trim().startsWith('<?xml')) {
+                            const endIndex = xml.indexOf('?>');
+                            if (endIndex > 0) {
+                                xmlDeclaration = xml.substring(0, endIndex + 2);
+                                xmlBody = xml.substring(endIndex + 2).trim();
+                            }
+                        }
+                        
+                        // Rimuovi tutti gli spazi bianchi tra i tag
+                        xmlBody = xmlBody.replace(/>\s*</g, '><');
+                        
+                        // Aggiungi interruzioni di riga e indentazione
+                        let formatted = '';
+                        let indent = '';
+                        
+                        for (let i = 0; i < xmlBody.length; i++) {
+                            const char = xmlBody.charAt(i);
+                            
+                            if (char === '<') {
+                                if (xmlBody.charAt(i + 1) === '/') {
+                                    // Tag di chiusura, riduci l'indentazione
+                                    indent = indent.substring(2);
+                                    formatted += '\n' + indent;
+                                } else if (xmlBody.charAt(i + 1) !== '?' && xmlBody.substring(i, i + 4) !== '<!--') {
+                                    // Tag di apertura (non dichiarazione XML o commento)
+                                    formatted += '\n' + indent;
+                                }
+                                
+                                formatted += '<';
+                            } else if (char === '>') {
+                                formatted += '>';
+                                
+                                if (xmlBody.charAt(i - 1) !== '/' && xmlBody.charAt(i - 1) !== '?' && xmlBody.substring(i - 2, i + 1) !== '-->' && xmlBody.charAt(i + 1) !== '<') {
+                                    // Tag di apertura che non è auto-chiuso, aumenta l'indentazione
+                                    indent += '  ';
+                                }
+                            } else {
+                                formatted += char;
+                            }
+                        }
+                        
+                        return xmlDeclaration + '\n' + formatted.trim();
+                    }
+                    
+                    // Prova prima il metodo principale, se fallisce usa il fallback
+                    let formattedXml;
+                    try {
+                        formattedXml = formatXML(xmlContent);
+                    } catch (e) {
+                        console.warn('Primary XML formatting failed, using fallback method', e);
+                        formattedXml = formatXMLFallback(xmlContent);
+                    }
+                    
+                    editor.setValue(formattedXml);
+                    
+                    // Pulisci eventuali risultati di validazione precedenti
+                    clearValidationResults();
+                } catch (error) {
+                    console.error('Error formatting XML:', error);
+                    alert('Impossibile formattare l\'XML. Assicurati che sia un XML valido.');
+                }
+            });
+
+            // Pulisci editor e risultati
+            document.getElementById('clear-btn').addEventListener('click', function() {
+                editor.setValue('');
+                document.getElementById('file-info').classList.add('hidden');
+                clearValidationResults();
+                
+                // Reset del file input
+                document.getElementById('xml-file-input').value = '';
+            });
+
+            // Carica esempio XML
+            document.getElementById('example-btn').addEventListener('click', function() {
+                const exampleXml = `<?xml version="1.0" encoding="UTF-8"?>
+<CBIPaymentRequest xmlns="urn:CBI:xsd:CBIPaymentRequest.00.04.01">
+    <GrpHdr>
+        <MsgId>MSG-ID-2023-00001</MsgId>
+        <CreDtTm>2023-11-20T10:30:00</CreDtTm>
+        <NbOfTxs>1</NbOfTxs>
+        <CtrlSum>1000.00</CtrlSum>
+        <InitgPty>
+            <Nm>Azienda ABC</Nm>
+            <Id>
+                <OrgId>
+                    <Othr>
+                        <Id>12345678901</Id>
+                    </Othr>
+                </OrgId>
+            </Id>
+        </InitgPty>
+    </GrpHdr>
+    <PmtInf>
+        <PmtInfId>PAY-INF-2023-00001</PmtInfId>
+        <PmtMtd>TRF</PmtMtd>
+        <ReqdExctnDt>
+            <Dt>2023-11-25</Dt>
+        </ReqdExctnDt>
+        <Dbtr>
+            <Nm>Azienda ABC</Nm>
+            <Id>
+                <OrgId>
+                    <AnyBIC>ABCDIT12</AnyBIC>
+                </OrgId>
+            </Id>
+        </Dbtr>
+        <DbtrAcct>
+            <Id>
+                <IBAN>IT60X0542811101000000123456</IBAN>
+            </Id>
+        </DbtrAcct>
+        <DbtrAgt>
+            <FinInstnId>
+                <BICFI>ABCDIT12</BICFI>
+                <ClrSysMmbId>
+                    <MmbId>12345</MmbId>
+                </ClrSysMmbId>
+            </FinInstnId>
+        </DbtrAgt>
+        <CdtTrfTxInf>
+            <PmtId>
+                <InstrId>INSTR-001</InstrId>
+                <EndToEndId>E2E-001</EndToEndId>
+            </PmtId>
+            <Amt>
+                <InstdAmt Ccy="EUR">1000.00</InstdAmt>
+            </Amt>
+            <Cdtr>
+                <Nm>Fornitore XYZ</Nm>
+                <PstlAdr>
+                    <Ctry>IT</Ctry>
+                    <AdrLine>Via Roma 123</AdrLine>
+                    <AdrLine>20100 Milano</AdrLine>
+                </PstlAdr>
+            </Cdtr>
+            <CdtrAcct>
+                <Id>
+                    <IBAN>IT60X0542811101000000654321</IBAN>
+                </Id>
+            </CdtrAcct>
+            <RmtInf>
+                <Ustrd>Pagamento fattura 12345</Ustrd>
+            </RmtInf>
+        </CdtTrfTxInf>
+    </PmtInf>
+</CBIPaymentRequest>`;
+                
+                editor.setValue(exampleXml);
+                document.getElementById('file-info').classList.add('hidden');
+            });
+        });
+    </script>
+</body>
+</html>

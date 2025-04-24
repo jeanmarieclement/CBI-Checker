@@ -1,0 +1,93 @@
+# Installazione del Validatore XML CBI
+
+Questa guida illustra come configurare il validatore XML CBI sul tuo server.
+
+## Requisiti
+
+- Server web con supporto PHP 7.2 o superiore
+- Estensione libxml abilitata
+- Estensione DOM abilitata
+- Almeno 128MB di memoria allocata per PHP
+
+## Struttura dei file
+
+```
+/
+├── index.html          # Interfaccia utente del validatore
+├── validate.php        # Script backend per la validazione XML
+├── CBIPaymentRequest.00.04.01.xsd  # Schema XSD per la validazione
+└── .htaccess           # Configurazione Apache per sicurezza
+```
+
+## Istruzioni di installazione
+
+1. **Caricamento dei file sul server**
+
+   Carica tutti i file nella directory desiderata sul tuo server web.
+
+2. **Impostazione dei permessi**
+
+   ```bash
+   chmod 644 *.html *.php *.xsd .htaccess
+   ```
+
+3. **Verifica delle estensioni PHP**
+
+   Assicurati che le estensioni PHP necessarie siano abilitate. Puoi creare un file `phpinfo.php` con il seguente contenuto:
+
+   ```php
+   <?php phpinfo(); ?>
+   ```
+
+   Accedi a questo file dal browser e verifica che le estensioni seguenti siano abilitate:
+   - libxml
+   - dom
+
+4. **Test del validatore**
+
+   Accedi all'URL del validatore (es. https://tuo-dominio.com/validatore/) e verifica che funzioni correttamente caricando un file XML di esempio.
+
+## Risoluzione dei problemi
+
+### Il validatore mostra "Schema XSD non trovato"
+
+- Verifica che il file `CBIPaymentRequest.00.04.01.xsd` sia nella stessa directory degli script PHP
+- Controlla i permessi del file XSD (dovrebbe essere leggibile dall'utente del web server)
+
+### Errori di timeout
+
+Se riscontri errori di timeout durante la validazione di file XML grandi:
+
+1. Modifica i limiti nel file `.htaccess`:
+   ```
+   php_value max_execution_time 60
+   php_value memory_limit 256M
+   ```
+
+2. Oppure modifica il file `php.ini` del tuo server.
+
+### Problemi di caricamento file
+
+- Verifica la configurazione di `upload_max_filesize` e `post_max_size` in PHP
+- Controlla i log di errore del server web
+
+## Personalizzazione
+
+### Aggiunta di uno schema XSD diverso
+
+1. Carica il nuovo file XSD sul server
+2. Modifica la variabile `$xsdPath` in `validate.php` per puntare al nuovo file
+
+### Modifica dell'aspetto
+
+Il frontend utilizza Tailwind CSS e CodeMirror. Puoi personalizzare l'aspetto modificando le classi in `index.html`.
+
+## Sicurezza
+
+- Lo script è configurato per proteggere l'accesso diretto allo schema XSD
+- Sono impostati header di sicurezza per prevenire attacchi comuni
+- Assicurati di mantenere aggiornato il server e PHP
+
+## Supporto
+
+Per supporto tecnico, contatta l'amministratore di sistema o il team di sviluppo.
